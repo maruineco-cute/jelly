@@ -821,7 +821,7 @@ canvas.addEventListener('pointerdown', e => {
   const h = hit(px, py);
   if (!h) return;
   canvas.setPointerCapture(e.pointerId);
-  drag = {sx:px, sy:py, wx:0, wy:1, dep:1, lean:0, side:1};
+  drag = {sx:px, sy:py, wx:0, wy:1, dep:1, lean:0, side:1, t0:performance.now()};
   ph.down = true; ph.liftT = 0;
   {
     const cu = (S.leftU + S.rightU)/2, cv = (S.topV + S.baseV)/2;
@@ -845,9 +845,10 @@ canvas.addEventListener('pointermove', e => {
   const dyN = (py - drag.sy)/W, up = -dyN;
   const awayY = (ph.pivT > (S.topV + S.baseV)/2) ? up : dyN;
   const pull = clamp(-0.17*drag.dep*drag.wy + awayY*(awayY > 0 ? 0.9 : 0.5), -0.3, 0.3);
-  if (up > 0.16 && Math.abs(px - drag.sx)/W < up*0.45){
-    const bl = smooth01(0, 0.05, up - 0.16);
-    ph.liftT = Math.min(0.18, (up - 0.16)*1.6);
+  // 持ち上げは「ほぼまっすぐ上に、しっかり長く引いたとき」だけ。それまでは伸びを楽しめる
+  if (up > 0.22 && Math.abs(px - drag.sx)/W < up*0.32 && performance.now() - drag.t0 > 350){
+    const bl = smooth01(0, 0.05, up - 0.22);
+    ph.liftT = Math.min(0.18, (up - 0.22)*1.5);
     ph.aT = lerp(pull, 0.06, bl); ph.bT = -0.15*drag.dep*drag.wx*(1 - bl);
   } else {
     // 左右にも引っぱれる: 触った側から外へ引くとのびる(まん中を触ったときは左右どちらでも横にのびる)
